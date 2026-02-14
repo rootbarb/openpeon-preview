@@ -94,6 +94,84 @@
       border-color: #58a6ff;
     }
 
+    .input-bar { position: relative; }
+
+    .autocomplete-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      max-height: 360px;
+      overflow-y: auto;
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-top: none;
+      border-radius: 0 0 8px 8px;
+      z-index: 10;
+      display: none;
+    }
+
+    .autocomplete-dropdown.open { display: block; }
+
+    .ac-section {
+      padding: 0.4rem 0.75rem 0.2rem;
+      font-size: 0.65rem;
+      font-family: 'JetBrains Mono', monospace;
+      color: #7d8590;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .ac-item {
+      padding: 0.5rem 0.75rem;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+      border-bottom: 1px solid #21262d;
+    }
+
+    .ac-item:last-child { border-bottom: none; }
+    .ac-item:hover, .ac-item.highlighted { background: #1a1a0d; }
+
+    .ac-item .ac-name {
+      font-size: 0.85rem;
+      color: #e6edf3;
+    }
+
+    .ac-item .ac-repo {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      color: #7d8590;
+    }
+
+    .ac-item .ac-cats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.25rem;
+      margin-top: 0.15rem;
+    }
+
+    .ac-cat {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.55rem;
+      padding: 0.1rem 0.35rem;
+      border-radius: 4px;
+      background: #21262d;
+      color: #9ca8c5;
+    }
+
+    .ac-cat.missing {
+      background: transparent;
+      color: #30363d;
+    }
+
+    .ac-pending-badge {
+      font-size: 0.6rem;
+      color: #d29922;
+      font-weight: 600;
+    }
+
     .input-bar input::placeholder {
       color: #484f58;
     }
@@ -379,8 +457,9 @@
   <p class="subtitle">Test any CESP sound pack from a GitHub repo</p>
 
   <div class="input-bar">
-    <input type="text" id="repo-input" placeholder="owner/repo  (e.g. rootbarb/openpeon-d2-deckard-cain)" />
+    <input type="text" id="repo-input" placeholder="owner/repo  (e.g. rootbarb/openpeon-d2-deckard-cain)" autocomplete="off" />
     <button id="load-btn" onclick="loadPack()">Load</button>
+    <div class="autocomplete-dropdown" id="ac-dropdown"></div>
   </div>
 
   <div id="status"></div>
@@ -411,9 +490,184 @@
     let tourAbort = null;
 
     const repoInput = document.getElementById('repo-input');
-    repoInput.addEventListener('keydown', e => {
-      if (e.key === 'Enter') loadPack();
+    const acDropdown = document.getElementById('ac-dropdown');
+
+    // --- Autocomplete ---
+    const CORE_CATS = ['session.start','task.acknowledge','task.complete','task.error','input.required','resource.limit'];
+    const EXT_CATS = ['user.spam','session.end','task.progress'];
+    const ALL_CAT_NAMES = [...CORE_CATS, ...EXT_CATS];
+    let acItems = []; // {name, repo, categories, pending}
+    let acHighlight = -1;
+
+    async function loadAutocompleteData() {
+      try {
+        const [regRes, prRes] = await Promise.all([
+          fetch('https://peonping.github.io/registry/index.json').then(r => r.ok ? r.json() : []),
+          fetch('https://api.github.com/repos/PeonPing/registry/pulls?state=open&per_page=50').then(r => r.ok ? r.json() : [])
+        ]);
+
+        const pending = [];
+        for (const pr of prRes) {
+          try {
+            const filesRes = await fetch(`https://api.github.com/repos/PeonPing/registry/pulls/${pr.number}/files`);
+            if (!filesRes.ok) continue;
+            const files = await filesRes.json();
+            const indexFile = files.find(f => f.filename === 'index.json');
+            if (!indexFile?.patch) continue;
+            const repoMatch = indexFile.patch.match(/"source_repo"\s*:\s*"([^"]+)"/);
+            const pathMatch = indexFile.patch.match(/"source_path"\s*:\s*"([^"]+)"/);
+            const nameMatch = indexFile.patch.match(/"display_name"\s*:\s*"([^"]+)"/) || indexFile.patch.match(/"name"\s*:\s*"([^"]+)"/);
+            if (!repoMatch) continue;
+            const sourceRepo = repoMatch[1];
+            const sourcePath = pathMatch ? pathMatch[1] : '';
+            const fullPath = sourcePath ? sourceRepo + '/' + sourcePath : sourceRepo;
+
+            // Try to get categories from manifest
+            let cats = [];
+            try {
+              for (const ref of ['main', 'master']) {
+                const mPath = sourcePath ? `${sourcePath}/openpeon.json` : 'openpeon.json';
+                const mRes = await fetch(`https://raw.githubusercontent.com/${sourceRepo}/${ref}/${mPath}`);
+                if (mRes.ok) {
+                  const m = await mRes.json();
+                  cats = Object.keys(m.categories || {});
+                  break;
+                }
+              }
+            } catch (e) {}
+
+            pending.push({
+              name: nameMatch ? nameMatch[1] : pr.title,
+              repo: fullPath,
+              categories: cats,
+              pending: true
+            });
+          } catch (e) {}
+        }
+
+        const accepted = [];
+        for (const pack of regRes) {
+          const fullPath = pack.source_path ? pack.source_repo + '/' + pack.source_path : pack.source_repo;
+          accepted.push({
+            name: pack.display_name || pack.name,
+            repo: fullPath,
+            categories: pack.categories || [],
+            pending: false
+          });
+        }
+
+        acItems = [...pending, ...accepted];
+      } catch (e) {
+        acItems = [];
+      }
+    }
+
+    function renderAcDropdown(query) {
+      const q = query.toLowerCase();
+      const filtered = q
+        ? acItems.filter(i => i.name.toLowerCase().includes(q) || i.repo.toLowerCase().includes(q))
+        : acItems;
+
+      if (!filtered.length) {
+        acDropdown.classList.remove('open');
+        return;
+      }
+
+      const pendingItems = filtered.filter(i => i.pending);
+      const acceptedItems = filtered.filter(i => !i.pending);
+
+      let html = '';
+      if (pendingItems.length) {
+        html += `<div class="ac-section">Pending</div>`;
+        html += pendingItems.map((item, i) => acItemHtml(item, i)).join('');
+      }
+      if (acceptedItems.length) {
+        html += `<div class="ac-section">Accepted</div>`;
+        html += acceptedItems.map((item, i) => acItemHtml(item, pendingItems.length + i)).join('');
+      }
+
+      acDropdown.innerHTML = html;
+      acDropdown.classList.add('open');
+      acHighlight = -1;
+    }
+
+    function acItemHtml(item, idx) {
+      const catDots = ALL_CAT_NAMES.map(c => {
+        const has = item.categories.includes(c);
+        return `<span class="ac-cat${has ? '' : ' missing'}" title="${escHtml(c)}">${escHtml(c.split('.').pop())}</span>`;
+      }).join('');
+
+      return `<div class="ac-item" data-idx="${idx}" data-repo="${escHtml(item.repo)}">
+        <div style="display:flex;align-items:center;gap:0.5rem">
+          <span class="ac-name">${escHtml(item.name)}</span>
+          ${item.pending ? '<span class="ac-pending-badge">PENDING</span>' : ''}
+        </div>
+        <span class="ac-repo">${escHtml(item.repo)}</span>
+        <div class="ac-cats">${catDots}</div>
+      </div>`;
+    }
+
+    function selectAcItem(repo) {
+      repoInput.value = repo;
+      acDropdown.classList.remove('open');
+      loadPack();
+    }
+
+    acDropdown.addEventListener('mousedown', e => {
+      e.preventDefault(); // prevent input blur
+      const item = e.target.closest('.ac-item');
+      if (item) selectAcItem(item.dataset.repo);
     });
+
+    repoInput.addEventListener('input', () => {
+      renderAcDropdown(repoInput.value.trim());
+    });
+
+    repoInput.addEventListener('focus', () => {
+      renderAcDropdown(repoInput.value.trim());
+    });
+
+    repoInput.addEventListener('blur', () => {
+      setTimeout(() => acDropdown.classList.remove('open'), 150);
+    });
+
+    repoInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        if (acHighlight >= 0) {
+          const items = acDropdown.querySelectorAll('.ac-item');
+          if (items[acHighlight]) {
+            selectAcItem(items[acHighlight].dataset.repo);
+            e.preventDefault();
+            return;
+          }
+        }
+        acDropdown.classList.remove('open');
+        loadPack();
+        return;
+      }
+
+      if (e.key === 'Escape') {
+        acDropdown.classList.remove('open');
+        return;
+      }
+
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        const items = acDropdown.querySelectorAll('.ac-item');
+        if (!items.length) return;
+        items.forEach(i => i.classList.remove('highlighted'));
+        if (e.key === 'ArrowDown') {
+          acHighlight = (acHighlight + 1) % items.length;
+        } else {
+          acHighlight = acHighlight <= 0 ? items.length - 1 : acHighlight - 1;
+        }
+        items[acHighlight].classList.add('highlighted');
+        items[acHighlight].scrollIntoView({ block: 'nearest' });
+      }
+    });
+
+    // Fetch autocomplete data on load
+    loadAutocompleteData();
 
     // Load from URL hash on page load
     if (location.hash) {
