@@ -166,7 +166,7 @@
     }
 
     .category-box.empty {
-      opacity: 0.5;
+      opacity: 1;
     }
 
     .sound-btn {
@@ -303,9 +303,9 @@
       { name: 'task.error',       desc: 'Error occurred',              tier: 'required' },
       { name: 'input.required',   desc: 'Waiting for user input',      tier: 'required' },
       { name: 'resource.limit',   desc: 'Rate limit hit',              tier: 'required' },
+      { name: 'user.spam',        desc: 'User sending commands too fast', tier: 'optional' },
       { name: 'session.end',      desc: 'Session closes gracefully',   tier: 'optional' },
       { name: 'task.progress',    desc: 'Long task still running',     tier: 'optional' },
-      { name: 'user.spam',        desc: 'User sending commands too fast', tier: 'optional' },
     ];
 
     let currentAudio = null;
