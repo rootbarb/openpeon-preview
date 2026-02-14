@@ -432,9 +432,9 @@
       if (ghMatch) repo = ghMatch[1].replace(/\.git$/, '');
 
       // Split into owner/repo and optional subpath
-      const parts = repo.split('/');
-      const ownerRepo = parts.slice(0, 2).join('/');
-      const subpath = parts.slice(2).join('/');
+      const segments = repo.split('/');
+      const ownerRepo = segments.slice(0, 2).join('/');
+      const subpath = segments.slice(2).join('/');
       repo = ownerRepo;
 
       const btn = document.getElementById('load-btn');
@@ -451,7 +451,7 @@
       container.innerHTML = '';
 
       // Update URL hash for sharing
-      location.hash = encodeURIComponent(repo);
+      location.hash = encodeURIComponent(subpath ? repo + '/' + subpath : repo);
 
       // Try main branch first, then master
       let manifest = null;
