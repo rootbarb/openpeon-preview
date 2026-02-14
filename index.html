@@ -188,11 +188,21 @@
 
     .sound-btn.playing .play-icon { background: #238636; }
 
-    .sound-btn .label { flex: 1; }
+    .sound-btn .label {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
 
     .sound-btn .file-name {
       font-size: 0.7rem;
       color: #484f58;
+      flex-shrink: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 40%;
     }
 
     .random-btn {
