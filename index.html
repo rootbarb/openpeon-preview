@@ -169,6 +169,32 @@
       opacity: 1;
     }
 
+    .category-box.touring {
+      border-color: #58a6ff;
+      box-shadow: 0 0 12px rgba(88, 166, 255, 0.3);
+    }
+
+    #tour-btn {
+      display: none;
+      margin: 0 auto 1.5rem;
+      padding: 0.6rem 1.5rem;
+      border-radius: 8px;
+      border: 1px solid #58a6ff;
+      background: transparent;
+      color: #58a6ff;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    #tour-btn:hover { background: #1a2332; }
+    #tour-btn.active {
+      background: #da3633;
+      border-color: #da3633;
+      color: #fff;
+    }
+    #tour-btn.active:hover { background: #f85149; border-color: #f85149; }
+
     .sound-btn {
       display: flex;
       align-items: center;
@@ -293,6 +319,7 @@
     <div class="meta" id="pack-meta"></div>
   </div>
 
+  <button id="tour-btn" onclick="toggleTour()">Play All</button>
   <div id="categories"></div>
 
   <script>
@@ -339,6 +366,8 @@
       btn.disabled = true;
       status.className = 'status-loading';
       status.textContent = 'Loading manifest...';
+      stopTour();
+      document.getElementById('tour-btn').style.display = 'none';
       header.style.display = 'none';
       container.innerHTML = '';
 
@@ -461,6 +490,7 @@
       const repoUrl = `https://github.com/${escHtml(repo)}`;
       status.innerHTML = `<a href="${repoUrl}" target="_blank">${ghSvg}Loaded ${displayName} from ${escHtml(repo)}</a>`;
 
+      document.getElementById('tour-btn').style.display = 'block';
       document.getElementById('load-btn').disabled = false;
     }
 
@@ -486,6 +516,98 @@
         if (btnEl) btnEl.classList.remove('playing');
         currentAudio = null;
       };
+    }
+
+    let tourRunning = false;
+    let tourAbort = null;
+
+    function toggleTour() {
+      if (tourRunning) {
+        stopTour();
+      } else {
+        startTour();
+      }
+    }
+
+    function stopTour() {
+      tourRunning = false;
+      if (tourAbort) tourAbort.abort();
+      tourAbort = null;
+      if (currentAudio) {
+        currentAudio.pause();
+        currentAudio = null;
+      }
+      document.querySelectorAll('.sound-btn.playing').forEach(b => b.classList.remove('playing'));
+      document.querySelectorAll('.category-box.touring').forEach(b => b.classList.remove('touring'));
+      const btn = document.getElementById('tour-btn');
+      btn.textContent = 'Play All';
+      btn.classList.remove('active');
+    }
+
+    async function startTour() {
+      tourRunning = true;
+      const controller = new AbortController();
+      tourAbort = controller;
+
+      const btn = document.getElementById('tour-btn');
+      btn.textContent = 'Stop';
+      btn.classList.add('active');
+
+      const boxes = document.querySelectorAll('.category-box:not(.empty)');
+
+      for (const box of boxes) {
+        if (!tourRunning) return;
+
+        // Highlight current category and scroll to it
+        document.querySelectorAll('.category-box.touring').forEach(b => b.classList.remove('touring'));
+        box.classList.add('touring');
+        box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        // Brief pause to show category before playing
+        await delay(600);
+        if (!tourRunning) return;
+
+        const soundBtns = box.querySelectorAll('.sound-btn');
+        for (const soundBtn of soundBtns) {
+          if (!tourRunning) return;
+
+          soundBtn.click();
+
+          // Wait for audio to finish, then add a gap
+          await waitForAudioEnd();
+          if (!tourRunning) return;
+
+          await delay(400);
+        }
+
+        // Pause between categories
+        await delay(800);
+      }
+
+      // Tour finished
+      if (tourRunning) {
+        document.querySelectorAll('.category-box.touring').forEach(b => b.classList.remove('touring'));
+        stopTour();
+      }
+    }
+
+    function delay(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    function waitForAudioEnd() {
+      return new Promise(resolve => {
+        if (!currentAudio) { resolve(); return; }
+        const check = () => {
+          if (!currentAudio || currentAudio.ended || currentAudio.paused) {
+            resolve();
+          } else {
+            currentAudio.addEventListener('ended', resolve, { once: true });
+            currentAudio.addEventListener('pause', resolve, { once: true });
+          }
+        };
+        check();
+      });
     }
 
     function formatBytes(bytes) {
