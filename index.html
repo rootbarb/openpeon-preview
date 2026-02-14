@@ -74,43 +74,50 @@
       max-width: 640px;
       margin: 0 auto 2rem;
       display: flex;
-      gap: 0.5rem;
+      gap: 0;
       position: relative;
       z-index: 1;
+      border: 5px solid transparent;
+      border-image-source: url('https://peonping.com/textures/button-bg.webp');
+      border-image-slice: 16 fill;
+      border-image-repeat: stretch;
+      image-rendering: pixelated;
+      transition: filter 0.2s;
     }
+
+    .input-bar:hover { filter: brightness(1.1); }
 
     .input-bar input {
       flex: 1;
       padding: 0.75rem 1rem;
-      border-radius: 8px;
-      border: 1px solid #30363d;
-      background: #161b22;
+      border: none;
+      background: transparent;
       color: #e6edf3;
-      font-size: 0.95rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
       outline: none;
-    }
-
-    .input-bar input:focus {
-      border-color: #58a6ff;
+      text-shadow: 1px 1px 0 rgba(0,0,0,0.92);
     }
 
     .input-bar input::placeholder {
-      color: #484f58;
+      color: #7d8590;
     }
 
     .input-bar button {
       padding: 0.75rem 1.5rem;
-      border-radius: 8px;
       border: none;
-      background: #238636;
-      color: #fff;
+      background: transparent;
+      color: #ffab01;
+      font-family: 'Friz Quadrata', 'Palatino Linotype', serif;
       font-size: 0.95rem;
       font-weight: 600;
       cursor: pointer;
       white-space: nowrap;
+      text-shadow: 1px 1px 0 rgba(0,0,0,0.92);
+      transition: color 0.2s;
     }
 
-    .input-bar button:hover { background: #2ea043; }
+    .input-bar button:hover { color: #ffd666; }
     .input-bar button:disabled { opacity: 0.5; cursor: wait; }
 
     #status {
@@ -335,49 +342,6 @@
       z-index: 1;
     }
 
-    .install-block {
-      display: inline-flex;
-      align-items: center;
-      gap: 12px;
-      border: 5px solid transparent;
-      border-image-source: url('https://peonping.com/textures/button-bg.webp');
-      border-image-slice: 16 fill;
-      border-image-repeat: stretch;
-      padding: 12px 20px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.85rem;
-      color: #e6edf3;
-      cursor: pointer;
-      transition: filter 0.2s;
-      image-rendering: pixelated;
-      position: relative;
-      z-index: 1;
-      margin: 0 auto 1.5rem;
-      text-shadow: 1px 1px 0 rgba(0,0,0,0.92);
-    }
-
-    .install-block:hover { filter: brightness(1.2); }
-
-    .install-block code {
-      white-space: nowrap;
-      overflow-x: auto;
-      min-width: 0;
-    }
-
-    .copy-btn {
-      background: none;
-      border: none;
-      color: #484f58;
-      cursor: pointer;
-      padding: 4px;
-      font-size: 1rem;
-      transition: color 0.2s;
-      flex-shrink: 0;
-    }
-
-    .copy-btn:hover { color: #ffab01; }
-    .copy-btn.copied { color: #3fb950; }
-
     .top-nav a { color: #58a6ff; text-decoration: none; }
     .top-nav a:hover { text-decoration: underline; }
     .top-nav .nav-icon {
@@ -406,13 +370,6 @@
   </div>
   <h1>OpenPeon Pack Preview</h1>
   <p class="subtitle">Test any CESP sound pack from a GitHub repo</p>
-
-  <div style="text-align:center;">
-    <div class="install-block" onclick="copyInstall(this)">
-      <code>brew install PeonPing/tap/peon-ping</code>
-      <button class="copy-btn" title="Copy to clipboard">&#x1F4CB;</button>
-    </div>
-  </div>
 
   <div class="input-bar">
     <input type="text" id="repo-input" placeholder="owner/repo  (e.g. rootbarb/openpeon-d2-deckard-cain)" />
@@ -713,19 +670,6 @@
           }
         };
         check();
-      });
-    }
-
-    function copyInstall(block) {
-      const text = block.querySelector('code').textContent;
-      navigator.clipboard.writeText(text).then(() => {
-        const btn = block.querySelector('.copy-btn');
-        btn.classList.add('copied');
-        btn.innerHTML = '&#x2713;';
-        setTimeout(() => {
-          btn.classList.remove('copied');
-          btn.innerHTML = '&#x1F4CB;';
-        }, 2000);
       });
     }
 
