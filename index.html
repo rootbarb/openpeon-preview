@@ -250,6 +250,9 @@
       font-size: 0.75rem;
     }
 
+    #pack-header .meta a { text-decoration: none; }
+    #pack-header .meta a:hover { text-decoration: underline; color: #ffab01; }
+
     #categories {
       max-width: 1400px;
       margin: 0 auto;
@@ -769,12 +772,23 @@
       // Show pack header
       document.getElementById('pack-name').textContent = manifest.display_name || manifest.name;
       const parts = [];
-      if (manifest.version) parts.push(`v${manifest.version}`);
-      if (manifest.author?.name) parts.push(`by ${manifest.author.name}`);
-      if (manifest.language) parts.push(manifest.language);
-      const totalSounds = Object.values(manifest.categories || {})
-        .reduce((sum, cat) => sum + (cat.sounds?.length || 0), 0);
-      parts.push(`${totalSounds} sounds`);
+      if (manifest.version) parts.push(escHtml(`v${manifest.version}`));
+      if (manifest.author?.name) {
+        const gh = manifest.author.github || manifest.author.name;
+        parts.push(`by <a href="https://github.com/${escHtml(gh)}" target="_blank" style="color:inherit">${escHtml(manifest.author.name)}</a>`);
+      }
+      if (manifest.language) parts.push(escHtml(manifest.language));
+      const allSounds = Object.values(manifest.categories || {})
+        .flatMap(cat => cat.sounds || []);
+      parts.push(`${allSounds.length} sounds`);
+
+      // Collect audio formats from sound files
+      const formats = new Set();
+      for (const s of allSounds) {
+        const ext = s.file.split('.').pop().toLowerCase();
+        if (ext) formats.add(ext);
+      }
+      if (formats.size) parts.push([...formats].join(', '));
 
       // Fetch repo tree to calculate total pack size
       try {
@@ -789,7 +803,7 @@
         }
       } catch (e) {}
 
-      document.getElementById('pack-meta').textContent = parts.join(' · ');
+      document.getElementById('pack-meta').innerHTML = parts.join(' &middot; ');
       header.style.display = 'block';
 
       // Build category boxes for all CESP categories
