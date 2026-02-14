@@ -497,16 +497,36 @@
     const EXT_CATS = ['user.spam','session.end','task.progress'];
     const ALL_CAT_NAMES = [...CORE_CATS, ...EXT_CATS];
     let acItems = []; // {name, repo, categories, pending}
+    let acLoading = true;
     let acHighlight = -1;
 
-    async function loadAutocompleteData() {
-      try {
-        const [regRes, prRes] = await Promise.all([
-          fetch('https://peonping.github.io/registry/index.json').then(r => r.ok ? r.json() : []),
-          fetch('https://api.github.com/repos/PeonPing/registry/pulls?state=open&per_page=50').then(r => r.ok ? r.json() : [])
-        ]);
+    function refreshAcIfFocused() {
+      if (document.activeElement === repoInput) {
+        renderAcDropdown(repoInput.value.trim());
+      }
+    }
 
-        const pending = [];
+    async function loadAutocompleteData() {
+      acLoading = true;
+
+      // Load accepted packs first (fast, single request)
+      try {
+        const regRes = await fetch('https://peonping.github.io/registry/index.json').then(r => r.ok ? r.json() : []);
+        for (const pack of regRes) {
+          const fullPath = pack.source_path ? pack.source_repo + '/' + pack.source_path : pack.source_repo;
+          acItems.push({
+            name: pack.display_name || pack.name,
+            repo: fullPath,
+            categories: pack.categories || [],
+            pending: false
+          });
+        }
+        refreshAcIfFocused();
+      } catch (e) {}
+
+      // Then load pending PRs (slower, multiple requests)
+      try {
+        const prRes = await fetch('https://api.github.com/repos/PeonPing/registry/pulls?state=open&per_page=50').then(r => r.ok ? r.json() : []);
         for (const pr of prRes) {
           try {
             const filesRes = await fetch(`https://api.github.com/repos/PeonPing/registry/pulls/${pr.number}/files`);
@@ -536,30 +556,20 @@
               }
             } catch (e) {}
 
-            pending.push({
+            // Insert pending items at the beginning
+            acItems.unshift({
               name: nameMatch ? nameMatch[1] : pr.title,
               repo: fullPath,
               categories: cats,
               pending: true
             });
+            refreshAcIfFocused();
           } catch (e) {}
         }
+      } catch (e) {}
 
-        const accepted = [];
-        for (const pack of regRes) {
-          const fullPath = pack.source_path ? pack.source_repo + '/' + pack.source_path : pack.source_repo;
-          accepted.push({
-            name: pack.display_name || pack.name,
-            repo: fullPath,
-            categories: pack.categories || [],
-            pending: false
-          });
-        }
-
-        acItems = [...pending, ...accepted];
-      } catch (e) {
-        acItems = [];
-      }
+      acLoading = false;
+      refreshAcIfFocused();
     }
 
     function renderAcDropdown(query) {
@@ -568,7 +578,7 @@
         ? acItems.filter(i => i.name.toLowerCase().includes(q) || i.repo.toLowerCase().includes(q))
         : acItems;
 
-      if (!filtered.length) {
+      if (!filtered.length && !acLoading) {
         acDropdown.classList.remove('open');
         return;
       }
@@ -577,6 +587,9 @@
       const acceptedItems = filtered.filter(i => !i.pending);
 
       let html = '';
+      if (acLoading && !filtered.length) {
+        html += `<div class="ac-section" style="padding:0.75rem;text-align:center;color:#d29922">Loading packs...</div>`;
+      }
       if (pendingItems.length) {
         html += `<div class="ac-section">Pending</div>`;
         html += pendingItems.map((item, i) => acItemHtml(item, i)).join('');
@@ -584,6 +597,9 @@
       if (acceptedItems.length) {
         html += `<div class="ac-section">Accepted</div>`;
         html += acceptedItems.map((item, i) => acItemHtml(item, pendingItems.length + i)).join('');
+      }
+      if (acLoading && filtered.length) {
+        html += `<div class="ac-section" style="text-align:center;color:#484f58;padding-bottom:0.5rem">Loading pending PRs...</div>`;
       }
 
       acDropdown.innerHTML = html;
