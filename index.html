@@ -172,6 +172,12 @@
       font-weight: 600;
     }
 
+    #ac-toggle {
+      padding: 0.75rem 0.7rem;
+      font-size: 0.7rem;
+      line-height: 1;
+    }
+
     .input-bar input::placeholder {
       color: #484f58;
     }
@@ -457,6 +463,7 @@
   <p class="subtitle">Test any CESP sound pack from a GitHub repo</p>
 
   <div class="input-bar">
+    <button id="ac-toggle" aria-label="Browse packs">&#9660;</button>
     <input type="text" id="repo-input" placeholder="owner/repo  (e.g. rootbarb/openpeon-d2-deckard-cain)" autocomplete="off" />
     <button id="load-btn" onclick="loadPack()">Load</button>
     <div class="autocomplete-dropdown" id="ac-dropdown"></div>
@@ -629,6 +636,15 @@
       acDropdown.classList.remove('open');
       loadPack();
     }
+
+    document.getElementById('ac-toggle').addEventListener('click', () => {
+      if (acDropdown.classList.contains('open')) {
+        acDropdown.classList.remove('open');
+      } else {
+        renderAcDropdown(repoInput.value.trim());
+        repoInput.focus();
+      }
+    });
 
     acDropdown.addEventListener('mousedown', e => {
       e.preventDefault(); // prevent input blur
