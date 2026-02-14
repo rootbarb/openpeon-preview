@@ -224,18 +224,23 @@
       border-color: #58a6ff;
     }
 
-    footer {
+    .top-nav {
       text-align: center;
-      margin-top: 3rem;
+      margin-bottom: 1.5rem;
       color: #484f58;
       font-size: 0.8rem;
     }
 
-    footer a { color: #58a6ff; text-decoration: none; }
-    footer a:hover { text-decoration: underline; }
+    .top-nav a { color: #58a6ff; text-decoration: none; }
+    .top-nav a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
+  <div class="top-nav">
+    Built for <a href="https://www.peonping.com">peon-ping</a> &middot;
+    <a href="https://openpeon.com">CESP spec</a> &middot;
+    <a href="https://github.com/PeonPing/peon-ping">GitHub</a>
+  </div>
   <h1>OpenPeon Pack Preview</h1>
   <p class="subtitle">Test any CESP sound pack from a GitHub repo</p>
 
@@ -252,12 +257,6 @@
   </div>
 
   <div id="categories"></div>
-
-  <footer>
-    Built for <a href="https://www.peonping.com">peon-ping</a> &middot;
-    <a href="https://openpeon.com">CESP spec</a> &middot;
-    <a href="https://github.com/PeonPing/peon-ping">GitHub</a>
-  </footer>
 
   <script>
     const CATEGORY_INFO = {
