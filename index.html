@@ -377,6 +377,8 @@
     ];
 
     let currentAudio = null;
+    let tourRunning = false;
+    let tourAbort = null;
 
     const repoInput = document.getElementById('repo-input');
     repoInput.addEventListener('keydown', e => {
@@ -558,9 +560,6 @@
         currentAudio = null;
       };
     }
-
-    let tourRunning = false;
-    let tourAbort = null;
 
     function toggleTour() {
       if (tourRunning) {
