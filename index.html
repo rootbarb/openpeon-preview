@@ -427,6 +427,33 @@
       border-color: #ffab01;
     }
 
+    .dup-banner {
+      max-width: 1400px;
+      margin: 0 auto 1rem;
+      padding: 0.6rem 1rem;
+      background: #2d1b00;
+      border: 1px solid #d29922;
+      border-radius: 8px;
+      color: #d29922;
+      font-size: 0.8rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .dup-banner strong { color: #ffab01; }
+
+    .sound-btn .dup-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.55rem;
+      padding: 0.1rem 0.35rem;
+      border-radius: 4px;
+      background: #2d1b00;
+      color: #d29922;
+      border: 1px solid #d29922;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
     .top-nav {
       text-align: center;
       margin-bottom: 1.5rem;
@@ -867,6 +894,48 @@
         box.appendChild(randomBtn);
 
         container.appendChild(box);
+      }
+
+      // Detect files appearing in multiple categories
+      const fileToCategories = {};
+      for (const [catName, catData] of Object.entries(categories)) {
+        for (const sound of (catData.sounds || [])) {
+          if (!fileToCategories[sound.file]) fileToCategories[sound.file] = [];
+          fileToCategories[sound.file].push(catName);
+        }
+      }
+      const dupes = Object.entries(fileToCategories).filter(([, cats]) => cats.length > 1);
+
+      // Remove old banner if any
+      document.querySelectorAll('.dup-banner').forEach(el => el.remove());
+
+      if (dupes.length) {
+        const banner = document.createElement('div');
+        banner.className = 'dup-banner';
+        const fileList = dupes.map(([file, cats]) =>
+          `<strong>${escHtml(file.split('/').pop())}</strong> in ${cats.map(c => escHtml(c)).join(', ')}`
+        ).join('<br>');
+        banner.innerHTML = `&#9888; ${dupes.length} file${dupes.length > 1 ? 's' : ''} used in multiple categories:<br>${fileList}`;
+        container.parentNode.insertBefore(banner, container);
+
+        // Mark the individual sound buttons
+        const dupeFiles = new Set(dupes.map(([f]) => f));
+        const dupeMap = Object.fromEntries(dupes);
+        container.querySelectorAll('.sound-btn').forEach(btn => {
+          const fileName = btn.querySelector('.file-name')?.textContent;
+          if (!fileName) return;
+          // Match by filename — find full path from dupeFiles
+          for (const [fullPath, cats] of dupes) {
+            if (fullPath.split('/').pop() === fileName) {
+              const badge = document.createElement('span');
+              badge.className = 'dup-badge';
+              badge.textContent = `${cats.length} cats`;
+              badge.title = cats.join(', ');
+              btn.appendChild(badge);
+              break;
+            }
+          }
+        });
       }
 
       status.className = 'status-ok';
