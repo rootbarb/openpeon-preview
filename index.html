@@ -74,50 +74,49 @@
       max-width: 640px;
       margin: 0 auto 2rem;
       display: flex;
-      gap: 0;
+      gap: 0.5rem;
       position: relative;
       z-index: 1;
+    }
+
+    .input-bar input {
+      flex: 1;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      border: 1px solid #30363d;
+      background: #161b22;
+      color: #e6edf3;
+      font-size: 0.95rem;
+      outline: none;
+    }
+
+    .input-bar input:focus {
+      border-color: #58a6ff;
+    }
+
+    .input-bar input::placeholder {
+      color: #484f58;
+    }
+
+    .input-bar button {
+      padding: 0.75rem 1.5rem;
       border: 5px solid transparent;
       border-image-source: url('https://peonping.com/textures/button-bg.webp');
       border-image-slice: 16 fill;
       border-image-repeat: stretch;
       image-rendering: pixelated;
-      transition: filter 0.2s;
-    }
-
-    .input-bar:hover { filter: brightness(1.1); }
-
-    .input-bar input {
-      flex: 1;
-      padding: 0.75rem 1rem;
-      border: none;
       background: transparent;
       color: #e6edf3;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.85rem;
-      outline: none;
-      text-shadow: 1px 1px 0 rgba(0,0,0,0.92);
-    }
-
-    .input-bar input::placeholder {
-      color: #7d8590;
-    }
-
-    .input-bar button {
-      padding: 0.75rem 1.5rem;
-      border: none;
-      background: transparent;
-      color: #ffab01;
       font-family: 'Friz Quadrata', 'Palatino Linotype', serif;
       font-size: 0.95rem;
       font-weight: 600;
       cursor: pointer;
       white-space: nowrap;
       text-shadow: 1px 1px 0 rgba(0,0,0,0.92);
-      transition: color 0.2s;
+      transition: filter 0.2s;
     }
 
-    .input-bar button:hover { color: #ffd666; }
+    .input-bar button:hover { filter: brightness(1.2); }
     .input-bar button:disabled { opacity: 0.5; cursor: wait; }
 
     #status {
