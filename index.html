@@ -217,6 +217,9 @@
   </div>
 
   <div id="status"></div>
+  <p id="repo-link" style="text-align:center;margin-bottom:1.5rem;font-size:0.85rem;display:none;">
+    <a id="repo-link-a" href="#" style="color:#58a6ff;text-decoration:none;" target="_blank"></a>
+  </p>
 
   <div id="pack-header">
     <h2 id="pack-name"></h2>
@@ -275,6 +278,7 @@
       btn.disabled = true;
       status.className = 'status-loading';
       status.textContent = 'Loading manifest...';
+      document.getElementById('repo-link').style.display = 'none';
       header.style.display = 'none';
       container.innerHTML = '';
 
@@ -366,6 +370,13 @@
 
       status.className = 'status-ok';
       status.textContent = `Loaded ${manifest.display_name || manifest.name} from ${repo}`;
+
+      const repoLinkEl = document.getElementById('repo-link');
+      const repoLinkA = document.getElementById('repo-link-a');
+      repoLinkA.href = `https://github.com/${repo}`;
+      repoLinkA.textContent = `github.com/${repo}`;
+      repoLinkEl.style.display = 'block';
+
       document.getElementById('load-btn').disabled = false;
     }
 
