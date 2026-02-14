@@ -511,8 +511,9 @@
 
       // Load accepted packs first (fast, single request)
       try {
-        const regRes = await fetch('https://peonping.github.io/registry/index.json').then(r => r.ok ? r.json() : []);
-        for (const pack of regRes) {
+        const regData = await fetch('https://peonping.github.io/registry/index.json').then(r => r.ok ? r.json() : {});
+        const regPacks = regData.packs || regData || [];
+        for (const pack of regPacks) {
           const fullPath = pack.source_path ? pack.source_repo + '/' + pack.source_path : pack.source_repo;
           acItems.push({
             name: pack.display_name || pack.name,
