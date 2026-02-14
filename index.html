@@ -301,8 +301,14 @@
 
     .sound-btn.playing .play-icon { background: #238636; }
 
-    .sound-btn .label {
+    .sound-btn .text-wrap {
       flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sound-btn .label {
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -312,11 +318,9 @@
       font-family: 'JetBrains Mono', monospace;
       font-size: 0.65rem;
       color: #505a79;
-      flex-shrink: 0;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      max-width: 40%;
     }
 
     .random-btn {
@@ -533,8 +537,10 @@
           btn.className = 'sound-btn';
           btn.innerHTML = `
             <span class="play-icon">&#9654;</span>
-            <span class="label">${escHtml(sound.label || sound.file)}</span>
-            <span class="file-name">${escHtml(sound.file.split('/').pop())}</span>
+            <span class="text-wrap">
+              <span class="label">${escHtml(sound.label || sound.file)}</span>
+              <span class="file-name">${escHtml(sound.file.split('/').pop())}</span>
+            </span>
           `;
           btn.onclick = () => playSound(audioUrl, btn);
           box.appendChild(btn);
