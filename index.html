@@ -161,8 +161,9 @@
     }
 
     #pack-header .meta {
-      color: #7d8590;
-      font-size: 0.85rem;
+      font-family: 'JetBrains Mono', monospace;
+      color: #9ca8c5;
+      font-size: 0.75rem;
     }
 
     #categories {
@@ -190,11 +191,11 @@
     .category-box.visible { display: flex; flex-direction: column; }
 
     .category-name {
-      font-size: 0.8rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
       font-weight: 600;
-      color: #7d8590;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
+      color: #ffab01;
+      letter-spacing: 0.02em;
       margin-bottom: 0.15rem;
       text-shadow: 1px 1px 0 rgba(0,0,0,0.92);
     }
@@ -228,8 +229,8 @@
     }
 
     .category-box.touring {
-      border-color: #58a6ff;
-      box-shadow: 0 0 12px rgba(88, 166, 255, 0.3);
+      border-color: #ffab01;
+      box-shadow: 0 0 12px rgba(255, 171, 1, 0.3);
     }
 
     #tour-btn {
@@ -238,22 +239,26 @@
       position: relative;
       z-index: 1;
       padding: 0.6rem 1.5rem;
-      border-radius: 8px;
-      border: 1px solid #58a6ff;
+      border: 5px solid transparent;
+      border-image-source: url('https://peonping.com/textures/button-bg.webp');
+      border-image-slice: 16 fill;
+      border-image-repeat: stretch;
+      image-rendering: pixelated;
       background: transparent;
-      color: #58a6ff;
-      font-size: 0.9rem;
+      color: #e6edf3;
+      font-family: 'Friz Quadrata', 'Palatino Linotype', serif;
+      font-size: 0.95rem;
       font-weight: 600;
       cursor: pointer;
+      text-shadow: 1px 1px 0 rgba(0,0,0,0.92);
+      transition: filter 0.2s;
     }
 
-    #tour-btn:hover { background: #1a2332; }
+    #tour-btn:hover { filter: brightness(1.2); }
     #tour-btn.active {
-      background: #da3633;
-      border-color: #da3633;
-      color: #fff;
+      color: #f85149;
     }
-    #tour-btn.active:hover { background: #f85149; border-color: #f85149; }
+    #tour-btn.active:hover { filter: brightness(1.3); }
 
     .sound-btn {
       display: flex;
@@ -273,8 +278,8 @@
     }
 
     .sound-btn:hover {
-      border-color: #58a6ff;
-      background: #1a2332;
+      border-color: #ffab01;
+      background: #1a1a0d;
     }
 
     .sound-btn.playing {
@@ -304,8 +309,9 @@
     }
 
     .sound-btn .file-name {
-      font-size: 0.7rem;
-      color: #484f58;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      color: #505a79;
       flex-shrink: 0;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -321,7 +327,7 @@
       border-radius: 8px;
       border: 1px dashed #30363d;
       background: transparent;
-      color: #58a6ff;
+      color: #ffab01;
       font-size: 0.8rem;
       cursor: pointer;
       font-weight: 500;
@@ -329,7 +335,7 @@
 
     .random-btn:hover {
       background: #1a2332;
-      border-color: #58a6ff;
+      border-color: #ffab01;
     }
 
     .top-nav {
@@ -341,7 +347,7 @@
       z-index: 1;
     }
 
-    .top-nav a { color: #58a6ff; text-decoration: none; }
+    .top-nav a { color: #ffab01; text-decoration: none; }
     .top-nav a:hover { text-decoration: underline; }
     .top-nav .nav-icon {
       display: inline-block;
