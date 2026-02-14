@@ -427,32 +427,52 @@
       border-color: #ffab01;
     }
 
-    .dup-banner {
+    .dup-accordion {
       max-width: 1400px;
-      margin: 0 auto 1rem;
-      padding: 0.6rem 1rem;
-      background: #2d1b00;
-      border: 1px solid #d29922;
-      border-radius: 8px;
-      color: #d29922;
-      font-size: 0.8rem;
+      margin: 2rem auto 0;
       position: relative;
       z-index: 1;
     }
 
-    .dup-banner strong { color: #ffab01; }
-
-    .sound-btn .dup-badge {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.55rem;
-      padding: 0.1rem 0.35rem;
-      border-radius: 4px;
-      background: #2d1b00;
-      color: #d29922;
-      border: 1px solid #d29922;
-      white-space: nowrap;
-      flex-shrink: 0;
+    .dup-accordion summary {
+      cursor: pointer;
+      padding: 0.5rem 0.75rem;
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      color: #484f58;
+      font-size: 0.75rem;
+      list-style: none;
+      user-select: none;
     }
+
+    .dup-accordion summary::-webkit-details-marker { display: none; }
+
+    .dup-accordion summary .arrow {
+      display: inline-block;
+      transition: transform 0.2s;
+      margin-right: 0.4rem;
+    }
+
+    .dup-accordion[open] summary .arrow { transform: rotate(90deg); }
+
+    .dup-accordion[open] summary {
+      border-radius: 8px 8px 0 0;
+      border-bottom-color: #21262d;
+    }
+
+    .dup-accordion .dup-body {
+      padding: 0.6rem 0.75rem;
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-top: none;
+      border-radius: 0 0 8px 8px;
+      color: #7d8590;
+      font-size: 0.75rem;
+      line-height: 1.6;
+    }
+
+    .dup-accordion .dup-body strong { color: #d29922; }
 
     .top-nav {
       text-align: center;
@@ -906,36 +926,25 @@
       }
       const dupes = Object.entries(fileToCategories).filter(([, cats]) => cats.length > 1);
 
-      // Remove old banner if any
-      document.querySelectorAll('.dup-banner').forEach(el => el.remove());
+      // Remove old accordion if any
+      document.querySelectorAll('.dup-accordion').forEach(el => el.remove());
 
       if (dupes.length) {
-        const banner = document.createElement('div');
-        banner.className = 'dup-banner';
-        const fileList = dupes.map(([file, cats]) =>
-          `<strong>${escHtml(file.split('/').pop())}</strong> in ${cats.map(c => escHtml(c)).join(', ')}`
-        ).join('<br>');
-        banner.innerHTML = `&#9888; ${dupes.length} file${dupes.length > 1 ? 's' : ''} used in multiple categories:<br>${fileList}`;
-        container.parentNode.insertBefore(banner, container);
+        const details = document.createElement('details');
+        details.className = 'dup-accordion';
 
-        // Mark the individual sound buttons
-        const dupeFiles = new Set(dupes.map(([f]) => f));
-        const dupeMap = Object.fromEntries(dupes);
-        container.querySelectorAll('.sound-btn').forEach(btn => {
-          const fileName = btn.querySelector('.file-name')?.textContent;
-          if (!fileName) return;
-          // Match by filename — find full path from dupeFiles
-          for (const [fullPath, cats] of dupes) {
-            if (fullPath.split('/').pop() === fileName) {
-              const badge = document.createElement('span');
-              badge.className = 'dup-badge';
-              badge.textContent = `${cats.length} cats`;
-              badge.title = cats.join(', ');
-              btn.appendChild(badge);
-              break;
-            }
-          }
-        });
+        const summary = document.createElement('summary');
+        summary.innerHTML = `<span class="arrow">&#9654;</span>${dupes.length} file${dupes.length > 1 ? 's' : ''} used in multiple categories`;
+        details.appendChild(summary);
+
+        const body = document.createElement('div');
+        body.className = 'dup-body';
+        body.innerHTML = dupes.map(([file, cats]) =>
+          `<strong>${escHtml(file.split('/').pop())}</strong> &mdash; ${cats.map(c => escHtml(c)).join(', ')}`
+        ).join('<br>');
+        details.appendChild(body);
+
+        container.parentNode.insertBefore(details, container.nextSibling);
       }
 
       status.className = 'status-ok';
