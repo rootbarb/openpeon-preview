@@ -98,11 +98,12 @@
     }
 
     #categories {
-      max-width: 800px;
+      max-width: 1400px;
       margin: 0 auto;
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      display: flex;
+      flex-wrap: wrap;
       gap: 1rem;
+      justify-content: center;
     }
 
     .category-box {
@@ -111,9 +112,12 @@
       border-radius: 12px;
       padding: 1.2rem;
       display: none;
+      flex: 1 1 260px;
+      max-width: 340px;
+      min-width: 240px;
     }
 
-    .category-box.visible { display: block; }
+    .category-box.visible { display: flex; flex-direction: column; }
 
     .category-name {
       font-size: 0.8rem;
