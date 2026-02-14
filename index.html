@@ -147,6 +147,28 @@
       margin-bottom: 0.75rem;
     }
 
+    .category-tier {
+      font-size: 0.65rem;
+      color: #484f58;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.5rem;
+    }
+
+    .category-tier.required { color: #3fb950; }
+    .category-tier.optional { color: #d29922; }
+
+    .category-empty {
+      font-size: 0.8rem;
+      color: #30363d;
+      font-style: italic;
+      padding: 0.5rem 0;
+    }
+
+    .category-box.empty {
+      opacity: 0.5;
+    }
+
     .sound-btn {
       display: flex;
       align-items: center;
@@ -274,17 +296,17 @@
   <div id="categories"></div>
 
   <script>
-    const CATEGORY_INFO = {
-      'session.start':    'Session begins',
-      'task.acknowledge':  'AI starts working',
-      'task.complete':     'Task finished',
-      'task.error':        'Error occurred',
-      'input.required':    'Waiting for user input',
-      'resource.limit':    'Rate limit hit',
-      'user.spam':         'Too many prompts',
-      'session.end':       'Session closed',
-      'task.progress':     'Long task heartbeat',
-    };
+    const ALL_CATEGORIES = [
+      { name: 'session.start',   desc: 'Session begins',              tier: 'required' },
+      { name: 'task.acknowledge', desc: 'AI starts working',           tier: 'required' },
+      { name: 'task.complete',    desc: 'Task finished',               tier: 'required' },
+      { name: 'task.error',       desc: 'Error occurred',              tier: 'required' },
+      { name: 'input.required',   desc: 'Waiting for user input',      tier: 'required' },
+      { name: 'resource.limit',   desc: 'Rate limit hit',              tier: 'required' },
+      { name: 'session.end',      desc: 'Session closes gracefully',   tier: 'optional' },
+      { name: 'task.progress',    desc: 'Long task still running',     tier: 'optional' },
+      { name: 'user.spam',        desc: 'User sending commands too fast', tier: 'optional' },
+    ];
 
     let currentAudio = null;
 
@@ -359,24 +381,38 @@
       document.getElementById('pack-meta').textContent = parts.join(' · ');
       header.style.display = 'block';
 
-      // Build category boxes
+      // Build category boxes for all CESP categories
       const categories = manifest.categories || {};
-      for (const [catName, catData] of Object.entries(categories)) {
-        const sounds = catData.sounds || [];
-        if (!sounds.length) continue;
+      for (const cat of ALL_CATEGORIES) {
+        const catData = categories[cat.name];
+        const sounds = catData?.sounds || [];
 
         const box = document.createElement('div');
-        box.className = 'category-box visible';
+        box.className = sounds.length ? 'category-box visible' : 'category-box visible empty';
 
         const nameEl = document.createElement('div');
         nameEl.className = 'category-name';
-        nameEl.textContent = catName;
+        nameEl.textContent = cat.name;
         box.appendChild(nameEl);
 
         const descEl = document.createElement('div');
         descEl.className = 'category-desc';
-        descEl.textContent = CATEGORY_INFO[catName] || '';
+        descEl.textContent = cat.desc;
         box.appendChild(descEl);
+
+        const tierEl = document.createElement('div');
+        tierEl.className = `category-tier ${cat.tier}`;
+        tierEl.textContent = cat.tier === 'required' ? 'core' : 'extended';
+        box.appendChild(tierEl);
+
+        if (!sounds.length) {
+          const emptyEl = document.createElement('div');
+          emptyEl.className = 'category-empty';
+          emptyEl.textContent = 'No sounds';
+          box.appendChild(emptyEl);
+          container.appendChild(box);
+          continue;
+        }
 
         for (const sound of sounds) {
           const audioUrl = `${base}/${sound.file}`;
@@ -394,7 +430,7 @@
         // Random play button
         const randomBtn = document.createElement('button');
         randomBtn.className = 'random-btn';
-        randomBtn.textContent = `Play random ${catName}`;
+        randomBtn.textContent = `Play random ${cat.name}`;
         randomBtn.onclick = () => {
           const pick = sounds[Math.floor(Math.random() * sounds.length)];
           const url = `${base}/${pick.file}`;
