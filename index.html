@@ -378,6 +378,19 @@
       const totalSounds = Object.values(manifest.categories || {})
         .reduce((sum, cat) => sum + (cat.sounds?.length || 0), 0);
       parts.push(`${totalSounds} sounds`);
+
+      // Fetch repo tree to calculate total pack size
+      try {
+        const treeRes = await fetch(`https://api.github.com/repos/${repo}/git/trees/${branch}?recursive=1`);
+        if (treeRes.ok) {
+          const tree = await treeRes.json();
+          const totalBytes = (tree.tree || [])
+            .filter(f => f.type === 'blob')
+            .reduce((sum, f) => sum + (f.size || 0), 0);
+          parts.push(formatBytes(totalBytes));
+        }
+      } catch (e) {}
+
       document.getElementById('pack-meta').textContent = parts.join(' · ');
       header.style.display = 'block';
 
@@ -473,6 +486,12 @@
         if (btnEl) btnEl.classList.remove('playing');
         currentAudio = null;
       };
+    }
+
+    function formatBytes(bytes) {
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+      return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
     }
 
     function escHtml(s) {
