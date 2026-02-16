@@ -182,6 +182,16 @@
       color: #484f58;
     }
 
+    .input-hint {
+      max-width: 640px;
+      margin: -1.5rem auto 2rem;
+      text-align: center;
+      font-size: 0.75rem;
+      color: #484f58;
+      position: relative;
+      z-index: 1;
+    }
+
     .input-bar button {
       padding: 0.75rem 1.5rem;
       border: 5px solid transparent;
@@ -514,11 +524,12 @@
 
   <div class="input-bar">
     <button id="ac-toggle" aria-label="Browse packs">&#9660;</button>
-    <input type="text" id="repo-input" placeholder="owner/repo  (e.g. rootbarb/openpeon-d2-deckard-cain)" autocomplete="off" />
+    <input type="text" id="repo-input" placeholder="owner/repo" autocomplete="off" />
     <button id="load-btn" onclick="loadPack()">Load</button>
     <div class="autocomplete-dropdown" id="ac-dropdown"></div>
   </div>
 
+  <div class="input-hint">Enter a GitHub repo path, paste a URL, or browse packs with &#9660;</div>
   <div id="status"></div>
 
   <div id="pack-header">
